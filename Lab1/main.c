@@ -112,9 +112,9 @@ int main (int argc, char *argv[]) {
 		return 0;
 	}
 
-	for (size_t i = 0; i < N; ++i) {
+	for (size_t i = 0; i < M; ++i) {
 		for (size_t j = 0; j < N; ++j) {
-			if (i == j) {
+			if ((rank * M + i) == j) {
 				A[i * N + j] = 2;
 			} else {
 				A[i * N + j] = 1;
