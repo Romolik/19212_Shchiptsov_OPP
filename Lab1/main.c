@@ -14,7 +14,7 @@ void mulMatrix (double *A, double *x, double *condition,
 		for (size_t j = 0; j < N; ++j) {
 			cur += (A[i * N + j] * x[rank * M + j]);
 		}
-		condition[rank * M + i] = cur;
+		condition[i] = cur;
 	}
 }
 
@@ -30,7 +30,7 @@ double normCounting (double *Ax, const size_t M) {
 		res += (Ax[i] * Ax[i]);
 	}
 	double norm;
-	MPI_Allreduce(&res, &norm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+	MPI_Allreduce (&res, &norm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 	return sqrt (norm);
 }
 
@@ -40,7 +40,7 @@ double normCountingForB (double *b, const size_t M, size_t rank, size_t N) {
 		res += (b[i] * b[i]);
 	}
 	double norm;
-	MPI_Allreduce(&res, &norm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+	MPI_Allreduce (&res, &norm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 	return sqrt (norm);
 }
 
@@ -61,15 +61,15 @@ int criterionCompletion (double *Ax, double *b, const size_t M, size_t rank,
 						 const size_t N, const double EPSILON) {
 	difCol (Ax, b, M, rank);
 	double firsrNorm = normCounting (Ax, M);
-	double secondNorm = normCountingForB( b, M, rank, N);
+	double secondNorm = normCountingForB (b, M, rank, N);
 	return (firsrNorm / secondNorm) >= EPSILON;
 }
 
 void simpleIterationMethod (double *A, double *b, double *x, const size_t N,
 							const size_t M, size_t rank, const double EPSILON) {
-	const double t = 0.0001;
+	const double t = 0.00001;
 	double *condition = NULL;
-	condition = (double *)malloc (N * sizeof (double));
+	condition = (double *)malloc (M * sizeof (double));
 	double *Ax = NULL;
 	Ax = (double *)malloc (M * sizeof (double));
 
@@ -101,7 +101,7 @@ int main (int argc, char *argv[]) {
 	MPI_Comm_rank (MPI_COMM_WORLD, &rank); // Получение номера процесса
 	const size_t N = 8;
 	const size_t M = N / size;
-	const double EPSILON = 0.00001;
+	const double EPSILON = 0.0000001;
 	double *A = NULL;
 	A = (double *)malloc (N * M * sizeof (double));
 	double *b = NULL;
@@ -133,19 +133,20 @@ int main (int argc, char *argv[]) {
 		b[i] = N + 1;
 	}
 
-	gettimeofday(&tv1, NULL);
+	gettimeofday (&tv1, NULL);
 	simpleIterationMethod (A, b, x, N, M, rank, EPSILON);
-	gettimeofday(&tv2, NULL);
+	gettimeofday (&tv2, NULL);
 	if (rank == 0) {
 		printCol (x, N);
 	}
 	double dt_sec = (tv2.tv_sec - tv1.tv_sec);
 	double dt_usec = (tv2.tv_usec - tv1.tv_usec);
-	double dt = dt_sec + 1e-6*dt_usec;
+	double dt = dt_sec + 1e-6 * dt_usec;
 	double maxdt;
-	MPI_Allreduce(&dt, &maxdt, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+
+	MPI_Allreduce (&dt, &maxdt, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
 	if (rank == 0) {
-		printf("\nTime diff %lf\n", maxdt);
+		printf ("\nTime diff %lf\n", maxdt);
 	}
 
 	free (A);
